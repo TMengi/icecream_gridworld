@@ -22,29 +22,56 @@ The state transition probabilities assume a Bernoulli distribution where the pro
 
 The reward function is defined to be only a function of the state $s$, and not the action or next state. This means that the reward is assigned for being in an ice cream place.
 
-The value iteration algorithm is as follows:
+### Value iteration algorithm:
+
 $$\begin{array}{ll}
 \text{init} & V^*_0(s') \leftarrow 0 \\
 & \pi^*_0(s) \leftarrow \text{random} \\
-\mathop{\text{loop}}_i & Q_i(s,a) = \sum_{s'\in\mathbb{S}} p(s,a,s')\left[r(s,a,s') + \gamma V_i^*(s')\right] \\
+\mathop{\text{loop}}\limits_i & \displaystyle Q_i(s,a) = \sum_{s'\in\mathbb{S}} p(s,a,s')\left[r(s,a,s') + \gamma V_i^*(s')\right] \\
 & V^*_{i+1} = \max_a Q^*_i(s,a) \\
 & \pi^*_{i+1} = \mathop{\text{arg\,max}}_a Q^*_i \\
-\text{until} & i = H
+\text{until} & i = H \\
+\text{return} & \pi^* = \pi_i
+\end{array}$$
+
+### Policy iteration algorithm:
+
+$$\begin{array}{ll}
+\text{init} & \pi_0(s) \leftarrow \text{random} \\
+\mathop{\text{loop}}\limits_i & P^{\pi_i}_{ij} = p(s_i,\pi_i(s_i),s_j) \\
+& R^{\pi_i}_{ij} = r(s_i,\pi_i(s_i),s_j) \\
+& \text{evaluate } V^{\pi_i}(s) = (T^{\pi_i}V^{\pi_i})(s) \text{ to convergence} \\
+& \displaystyle Q^{\pi_i}(s,a) = \sum_{s'\in\mathbb{S}} p(s,a,s')\left[r(s,a,s') + \gamma V^{\pi_i}(s')\right] \\
+& \pi_{i+1} = \mathop{\text{arg\,max}}\limits_a Q^{\pi_i}(s,a) \\
+\text{until} & \pi_{i+1} = \pi_i \\
+\text{return} & \pi^* = \pi_i
 \end{array}$$
 
 ## Files
 
-`ice_cream.m` is the main script for this problem which defines all parameters, the the action space, the state transition probabilities, the reward function, the time horizon, and the discount factor, then runs a value iteration algorithm to generate an optimal policy. The policy is then used for a simulation and the results are plotted.
+`ice_cream.m` is the main script for this problem which defines all parameters, the the action space, the state transition probabilities, the reward function, the time horizon, and the discount factor, then runs either a value iteration or policy iteration algorithm to generate an optimal policy. The policy is then used for a simulation and the results are plotted.
 
 `xy_to_si.m` and `si_to_xy.m` are functions which map a coordinate pair $(x,y)$ into a certain state $s$.
 
 ## Results
 
-The first plot shows the results for $\gamma=1$ (no discounting), $H=10$, and deterministic state transitions ($p=1$). The agent goes straight for the largest reward.
-![plot1](plots/g10h10p10.png)
+### Value iteration algorithm
+
+The first plot shows the results for $\gamma=1$ (no discounting), $H=10$, and deterministic state transitions ($p=1$). The agent goes for the largest reward along the shortest path.
+![plot1](plots/val_g10h10p10.png)
 
 Decreasing the certainty that the action will have the desired result to $p=0.4$ causes the agent to avoid the road.
-![plot2](plots/g10h10p04.png)
+![plot2](plots/val_g10h10p04.png)
 
 Changing the discount factor to $\gamma=0.3$ with a state transition certainty at $p=0.8$ causes the agent to dodge the road and stop at the first ice cream place. Increasing the certainty to $p=0.9$ causes the agent to walk next to the road.
-![plot3](plots/g03h10p08.png)
+![plot3](plots/val_g03h10p08.png)
+
+### Policy iteration algorithm
+
+This implementation requires $\gamma<1$ in order to guarantee convergence when evaluating $V^{\pi_i}(s)$.
+
+Using $\gamma=0.9$, $H=10$, and $p=1$ reproduces the first plot above where the agent goes for the largest reward along the shortest path.
+
+Decreasing the certainty to $p=0.3$ reproduces the second plot above where the agent goes for the largest reward but avoids the road.
+
+Reducing the discount factor to $\gamma=0.3$ with a state transition certainty at $p=0.8$ reproduces the third plot where the agent dodges the road and stops at the first ice cream place. Increasing the certainty to $p=0.9$ causes the agent to walk next to the road.

@@ -37,10 +37,12 @@ p0 = [3, 5];
 s0 = xy_to_si(p0, n);
 
 % discount factor
-gamma = .3;
+gamma = .7;
 
 % time horizon
 H = 10;
+
+solver = 'policy';
 
 %% state space
 
@@ -62,7 +64,7 @@ nA = size(A, 1);
 %% state transition probabilities
 
 % Bernoulli distribution for action outcomes
-p = .9; % probability of action having desired outcome
+p = .3; % probability of action having desired outcome
 q = (1-p)/(nA-1); % probability of action having other outcomes
 
 % initialize
@@ -108,9 +110,6 @@ for i = 1:nS % loop over states
     
 end
 
-% sum along third axis should be ones I think???
-% fuck yeah
-
 %% reward function
 
 % initialize
@@ -127,15 +126,75 @@ end
 
 %% value iteration algorithm
 
-% initialization
-i = 0;
-V = zeros(nS, 1);
-Pi = randi(nA, [nS, 1]);
+if strcmp(solver, 'value')
 
-% loop
-while i < H
-    [V, Pi] = max(sum(P.*(R + gamma*ones(nS, nA, nS).*reshape(V, 1, 1, nS)), 3), [], 2);
-    i = i + 1;
+    % initialization
+    i = 0;
+    V = zeros(nS, 1);
+
+    % loop
+    while i < H
+        
+        % optimal Bellman backup
+        [V, Pi] = max(sum(P.*(R + gamma*ones(nS, nA, nS).*reshape(V, 1, 1, nS)), 3), [], 2);
+        
+        % increment timestep
+        i = i + 1;
+        
+    end
+
+end
+
+%% policy iteration algorithm
+
+if strcmp(solver, 'policy')
+    
+    % initialization
+    Pi = randi(nA, [nS, 1]);
+    converged = false;
+    i = 0;
+    i_max = 100;
+    
+    % loop
+    while ~converged
+        
+        % take transition probabilities and rewards under current policy
+        P_Pi = zeros(nS);
+        R_Pi = zeros(nS);
+        for j = 1:nS
+            P_Pi(j, :) = reshape(P(j,Pi(j),:), 1, nS);
+            R_Pi(j, :) = reshape(R(j,Pi(j),:), 1, nS);
+        end
+        
+        % evaluate reward function
+        % V_Pi = pinv(1-P_Pi*gamma)*diag(P_Pi*R_Pi');
+        v_converged = false;
+        V_Pi = zeros(nS, 1);
+        while ~v_converged
+            V1_Pi = sum(P_Pi.*(R_Pi + gamma*V_Pi'), 2);
+            if norm(V1_Pi - V_Pi, 'inf') <= 1e-3
+                v_converged = true;
+            else
+                V_Pi = V1_Pi;
+            end
+        end
+            
+        % optimal Bellman backup
+        [V, Pi1] = max(sum(P.*(R + gamma*ones(nS, nA, nS).*reshape(V_Pi, 1, 1, nS)), 3), [], 2);
+        
+        % check for convergence
+        if sum(Pi1 == Pi) == nS
+            converged = true;
+        else
+            Pi = Pi1;
+            i = i + 1;
+        end
+        if i >= i_max
+            break
+        end
+        
+    end
+    
 end
 
 %% run simulation
@@ -188,3 +247,7 @@ xlim([0, n+1]);
 ylim([0, n+1]);
 % title('Ice Cream Gridworld');
 title(sprintf('gamma=%.1f, H=%.0f, p=%.1f', gamma, H, p));
+
+%% save plot
+
+% saveas(gcf, 'g03h10p08.png');

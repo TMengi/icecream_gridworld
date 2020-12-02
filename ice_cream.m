@@ -32,6 +32,9 @@ p_blocked = [2, 2;
              3, 4];
 s_blocked = xy_to_si(p_blocked, n);
 
+% allowable states
+s_good = setdiff(1:nS, s_blocked)';
+
 % initial condition
 p0 = [3, 5];
 s0 = xy_to_si(p0, n);
@@ -166,18 +169,18 @@ if strcmp(solver, 'policy')
             R_Pi(j, :) = reshape(R(j,Pi(j),:), 1, nS);
         end
         
-        % evaluate reward function
-        % V_Pi = pinv(1-P_Pi*gamma)*diag(P_Pi*R_Pi');
-        v_converged = false;
-        V_Pi = zeros(nS, 1);
-        while ~v_converged
-            V1_Pi = sum(P_Pi.*(R_Pi + gamma*V_Pi'), 2);
-            if norm(V1_Pi - V_Pi, 'inf') <= 1e-3
-                v_converged = true;
-            else
-                V_Pi = V1_Pi;
-            end
-        end
+        % evaluate reward function assuming infinite time horizon
+        V_Pi = (eye(nS)-P_Pi*gamma)\diag(P_Pi*R_Pi');
+%         v_converged = false;
+%         V_Pi = zeros(nS, 1);
+%         while ~v_converged
+%             V1_Pi = sum(P_Pi.*(R_Pi + gamma*V_Pi'), 2);
+%             if norm(V1_Pi - V_Pi, 'inf') <= 1e-3
+%                 v_converged = true;
+%             else
+%                 V_Pi = V1_Pi;
+%             end
+%         end
             
         % optimal Bellman backup
         [V, Pi1] = max(sum(P.*(R + gamma*ones(nS, nA, nS).*reshape(V_Pi, 1, 1, nS)), 3), [], 2);
@@ -236,6 +239,13 @@ plot(p_blocked(:,1), p_blocked(:,2), 'ks', 'LineWidth', 4, 'MarkerSize', 50);
 % path
 path = si_to_xy(s, n);
 plot(path(:, 1), path(:, 2), 'b');
+
+% policy
+xy = si_to_xy(s_good, n);
+uv = A(Pi(s_good), :);
+xy = xy - .25*uv;
+quiver(xy(:,1), xy(:,2), uv(:,1), uv(:,2), .5, 'b');
+scatter(xy(Pi == 1, 1), xy(Pi == 1, 2), 'bo');
 
 % boundaries
 plot([0 n n 0 0]+1/2, [0 0 n n 0]+1/2, 'k--');

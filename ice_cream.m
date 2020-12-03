@@ -245,7 +245,7 @@ xy = si_to_xy(s_good, n);
 uv = A(Pi(s_good), :);
 xy = xy - .25*uv;
 quiver(xy(:,1), xy(:,2), uv(:,1), uv(:,2), .5, 'b');
-scatter(xy(Pi == 1, 1), xy(Pi == 1, 2), 'bo');
+scatter(xy(Pi(s_good) == 1, 1), xy(Pi(s_good) == 1, 2), 'bo');
 
 % boundaries
 plot([0 n n 0 0]+1/2, [0 0 n n 0]+1/2, 'k--');

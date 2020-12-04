@@ -144,10 +144,8 @@ grid on;
 tau = 1;
 while dQ_norm > 1e-4
     
-    s_t = s_blocked(1);
-    while ismember(s_t, s_blocked)
-        s_t = randi(nS);
-    end
+    % initialize 
+    s_t = s_good(randi(length(s_good)));
 
 %     % initialize plot
 %     figure(1);
@@ -223,27 +221,6 @@ while dQ_norm > 1e-4
 end
 figure(1); hold off;
 figure(2); hold off;
-
-%% simulate with optimal policy
-
-% 
-% s = zeros(H, 1);
-% s(1) = s0;
-% 
-% for i = 2:H
-%     
-%     % get current position
-%     s_t = s(i-1);
-%     p_t = si_to_xy(s_t, n);
-%     
-%     % take action
-%     a_t = A(Pi(s_t), :);
-%     
-%     % update state
-%     p_t1 = p_t + a_t;
-%     s(i) = xy_to_si(p_t1, n);
-%     
-% end
 
 %% plot policy
 

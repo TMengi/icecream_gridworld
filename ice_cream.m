@@ -243,8 +243,8 @@ plot(path(:, 1), path(:, 2), 'b');
 % policy
 xy = si_to_xy(s_good, n);
 uv = A(Pi(s_good), :);
-xy = xy - .25*uv;
-quiver(xy(:,1), xy(:,2), uv(:,1), uv(:,2), .5, 'b');
+xy = xy - .15*uv;
+quiver(xy(:,1), xy(:,2), uv(:,1), uv(:,2), .3, 'b');
 scatter(xy(Pi(s_good) == 1, 1), xy(Pi(s_good) == 1, 2), 'bo');
 
 % boundaries
